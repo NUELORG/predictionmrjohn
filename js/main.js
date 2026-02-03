@@ -49,22 +49,32 @@ async function loadAllData() {
     
     try {
         // Try loading from JSONBin first
-        if (JSONBIN_BIN_ID && !JSONBIN_BIN_ID.includes('$')) {
+        if (JSONBIN_BIN_ID && JSONBIN_BIN_ID.length > 10) {
             const response = await fetch(API_URL + '/latest', {
-                headers: { 'X-Access-Key': JSONBIN_API_KEY }
+                headers: { 
+                    'X-Master-Key': JSONBIN_API_KEY,
+                    'X-Bin-Meta': 'false'
+                }
             });
-            const result = await response.json();
             
-            if (result.record) {
-                allData = result.record;
-                renderLeagueTabs(allData.leagues);
-                renderPredictions(allData.predictions);
-                renderStats(allData.stats);
-                return;
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Handle both wrapped and unwrapped responses
+                allData = result.record || result;
+                
+                if (allData && allData.predictions) {
+                    renderLeagueTabs(allData.leagues || []);
+                    renderPredictions(allData.predictions);
+                    renderStats(allData.stats || {});
+                    console.log('Loaded from JSONBin:', allData.predictions.length, 'predictions');
+                    return;
+                }
             }
         }
         
         // Fallback to local predictions.json
+        console.log('Falling back to local file...');
         const response = await fetch('predictions.json?v=' + Date.now());
         allData = await response.json();
         
