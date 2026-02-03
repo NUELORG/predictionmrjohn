@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Prediction - ScoreSage Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../" class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="18" stroke="url(#grad1)" stroke-width="3"/>
+                            <path d="M20 8L23.5 16.5L32 20L23.5 23.5L20 32L16.5 23.5L8 20L16.5 16.5L20 8Z" fill="url(#grad1)"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#F59E0B"/>
+                                    <stop offset="100%" style="stop-color:#EF4444"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Score<span class="highlight">Sage</span></span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="add.html" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    <span>Add Prediction</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="admin-info">
+                    <div class="admin-avatar">A</div>
+                    <div class="admin-details">
+                        <span class="admin-name">Admin</span>
+                        <span class="admin-role">Administrator</span>
+                    </div>
+                </div>
+                <a href="#" class="logout-btn" id="logoutBtn" title="Logout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <h1>Edit Prediction</h1>
+                    <p id="matchTitle">Loading...</p>
+                </div>
+                <div class="header-right">
+                    <a href="dashboard.html" class="btn btn-ghost">← Back</a>
+                </div>
+            </header>
+            
+            <div class="form-card">
+                <form id="editForm" class="prediction-form">
+                    <input type="hidden" name="id">
+                    
+                    <!-- Teams -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Home Team *</label>
+                            <input type="text" name="home_team" class="form-input" required>
+                        </div>
+                        <div class="form-group vs-separator"><span>VS</span></div>
+                        <div class="form-group">
+                            <label class="form-label">Away Team *</label>
+                            <input type="text" name="away_team" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <!-- League, Date, Time -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">League *</label>
+                            <select name="league" class="form-input" required>
+                                <option value="1|Premier League">Premier League</option>
+                                <option value="2|La Liga">La Liga</option>
+                                <option value="3|Serie A">Serie A</option>
+                                <option value="4|Bundesliga">Bundesliga</option>
+                                <option value="5|Ligue 1">Ligue 1</option>
+                                <option value="6|Champions League">Champions League</option>
+                                <option value="7|Europa League">Europa League</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" name="match_date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" name="match_time" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <!-- Prediction, Odds, Confidence -->
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label class="form-label">Prediction *</label>
+                            <select name="prediction" class="form-input" required>
+                                <option value="Home Win">Home Win</option>
+                                <option value="Away Win">Away Win</option>
+                                <option value="Draw">Draw</option>
+                                <option value="Over 1.5 Goals">Over 1.5 Goals</option>
+                                <option value="Over 2.5 Goals">Over 2.5 Goals</option>
+                                <option value="Over 3.5 Goals">Over 3.5 Goals</option>
+                                <option value="Under 2.5 Goals">Under 2.5 Goals</option>
+                                <option value="Both Teams to Score">BTTS</option>
+                                <option value="BTTS & Over 2.5">BTTS & Over 2.5</option>
+                                <option value="Home Win & Over 2.5">Home Win & Over 2.5</option>
+                                <option value="Double Chance 1X">Double Chance 1X</option>
+                                <option value="Double Chance X2">Double Chance X2</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Odds *</label>
+                            <input type="number" name="odds" class="form-input" step="0.01" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confidence</label>
+                            <select name="confidence" class="form-input">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="very_high">Very High</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Result -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Result</label>
+                            <select name="result" class="form-input">
+                                <option value="pending">Pending</option>
+                                <option value="won">Won</option>
+                                <option value="lost">Lost</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis -->
+                    <div class="form-group">
+                        <label class="form-label">Analysis</label>
+                        <textarea name="analysis" class="form-input form-textarea" rows="2"></textarea>
+                    </div>
+                    
+                    <!-- VIP -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="is_vip">
+                            <span class="checkbox-custom"></span>
+                            <span>VIP Prediction</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">Update Prediction</button>
+                        <a href="dashboard.html" class="btn btn-ghost btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <script src="admin.js"></script>
+    <script>
+        // Check login
+        if (localStorage.getItem('adminLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('adminLoggedIn');
+            window.location.href = 'index.html';
+        });
+        
+        // Get prediction ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const predId = parseInt(urlParams.get('id'));
+        
+        if (!predId) {
+            window.location.href = 'dashboard.html';
+        }
+        
+        // Load prediction data
+        loadPrediction();
+        
+        async function loadPrediction() {
+            const predictions = await getPredictions();
+            const pred = predictions.find(p => p.id === predId);
+            
+            if (!pred) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            const form = document.getElementById('editForm');
+            form.id_field.value = pred.id;
+            form.home_team.value = pred.home_team;
+            form.away_team.value = pred.away_team;
+            form.league.value = pred.league_id + '|' + pred.league_name;
+            form.match_date.value = pred.match_date;
+            form.match_time.value = pred.match_time;
+            form.prediction.value = pred.prediction;
+            form.odds.value = pred.odds;
+            form.confidence.value = pred.confidence || 'medium';
+            form.result.value = pred.result || 'pending';
+            form.analysis.value = pred.analysis || '';
+            form.is_vip.checked = pred.is_vip == 1;
+            
+            document.getElementById('matchTitle').textContent = pred.home_team + ' vs ' + pred.away_team;
+        }
+        
+        // Handle form submit
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const leagueData = form.league.value.split('|');
+            
+            const predictions = await getPredictions();
+            const index = predictions.findIndex(p => p.id === predId);
+            
+            if (index !== -1) {
+                predictions[index] = {
+                    id: predId,
+                    home_team: form.home_team.value.trim(),
+                    away_team: form.away_team.value.trim(),
+                    league_id: parseInt(leagueData[0]),
+                    league_name: leagueData[1],
+                    match_date: form.match_date.value,
+                    match_time: form.match_time.value || '15:00',
+                    prediction: form.prediction.value,
+                    odds: parseFloat(form.odds.value),
+                    confidence: form.confidence.value,
+                    analysis: form.analysis.value.trim(),
+                    result: form.result.value,
+                    is_vip: form.is_vip.checked ? 1 : 0
+                };
+                
+                await savePredictions(predictions);
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
+

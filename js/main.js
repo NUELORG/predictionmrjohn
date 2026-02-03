@@ -1,9 +1,9 @@
 /**
  * ScoreSage - Main JavaScript
- * Static version for Vercel/GitHub Pages
+ * Works with Vercel - uses localStorage for data
  */
 
-// Load data from JSON file
+const STORAGE_KEY = 'scoresage_predictions';
 const DATA_URL = 'predictions.json';
 
 // DOM Elements
@@ -20,7 +20,6 @@ const elements = {
     winRate: document.getElementById('winRate')
 };
 
-// State
 let currentLeague = 'all';
 let allData = null;
 
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
 });
 
-// Set current date
 function setCurrentDate() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const date = new Date().toLocaleDateString('en-US', options);
@@ -41,13 +39,50 @@ function setCurrentDate() {
     }
 }
 
-// Load all data from JSON
+// Load data - first try localStorage (admin data), then fall back to JSON file
 async function loadAllData() {
     showLoading();
     
+    // First check localStorage for admin-added predictions
+    const localData = localStorage.getItem(STORAGE_KEY);
+    
+    if (localData) {
+        const predictions = JSON.parse(localData);
+        const stats = {
+            won: predictions.filter(p => p.result === 'won').length,
+            lost: predictions.filter(p => p.result === 'lost').length,
+            pending: predictions.filter(p => p.result === 'pending').length
+        };
+        
+        allData = {
+            predictions: predictions,
+            leagues: [
+                {id: 1, name: 'Premier League'},
+                {id: 2, name: 'La Liga'},
+                {id: 3, name: 'Serie A'},
+                {id: 4, name: 'Bundesliga'},
+                {id: 5, name: 'Ligue 1'},
+                {id: 6, name: 'Champions League'},
+                {id: 7, name: 'Europa League'}
+            ],
+            stats: stats
+        };
+        
+        renderLeagueTabs(allData.leagues);
+        renderPredictions(allData.predictions);
+        renderStats(allData.stats);
+        return;
+    }
+    
+    // Fall back to predictions.json file
     try {
-        const response = await fetch(DATA_URL + '?v=' + Date.now()); // Cache bust
+        const response = await fetch(DATA_URL + '?v=' + Date.now());
         allData = await response.json();
+        
+        // Save to localStorage for consistency
+        if (allData.predictions) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allData.predictions));
+        }
         
         renderLeagueTabs(allData.leagues);
         renderPredictions(allData.predictions);
@@ -58,7 +93,6 @@ async function loadAllData() {
     }
 }
 
-// Render league tabs
 function renderLeagueTabs(leagues) {
     if (!elements.leagueTabs || !leagues) return;
     
@@ -92,7 +126,6 @@ function renderLeagueTabs(leagues) {
     });
 }
 
-// Show loading state
 function showLoading() {
     if (!elements.predictionsGrid) return;
     
@@ -108,7 +141,6 @@ function showLoading() {
     }
 }
 
-// Show no predictions state
 function showNoPredictions() {
     if (elements.predictionsGrid) {
         elements.predictionsGrid.innerHTML = '';
@@ -118,7 +150,6 @@ function showNoPredictions() {
     }
 }
 
-// Render predictions
 function renderPredictions(predictions) {
     if (!elements.predictionsGrid) return;
     
@@ -133,7 +164,6 @@ function renderPredictions(predictions) {
     
     elements.predictionsGrid.innerHTML = predictions.map(pred => createPredictionCard(pred)).join('');
     
-    // Animate cards
     const cards = elements.predictionsGrid.querySelectorAll('.prediction-card');
     cards.forEach((card, index) => {
         card.style.opacity = '0';
@@ -146,22 +176,21 @@ function renderPredictions(predictions) {
     });
 }
 
-// Create prediction card HTML
 function createPredictionCard(pred) {
     const confidenceLevels = { 'low': 1, 'medium': 2, 'high': 3, 'very_high': 4 };
     const confidenceLevel = confidenceLevels[pred.confidence] || 2;
     
-    const resultBadgeClass = { 'won': 'won', 'lost': 'lost', 'pending': 'pending', 'void': 'pending' };
-    const resultText = { 'won': '✓ Won', 'lost': '✗ Lost', 'pending': '⏳ Pending', 'void': '⊘ Void' };
+    const resultBadgeClass = { 'won': 'won', 'lost': 'lost', 'pending': 'pending' };
+    const resultText = { 'won': '✓ Won', 'lost': '✗ Lost', 'pending': '⏳ Pending' };
     
-    const matchDate = new Date(pred.match_date + 'T' + pred.match_time);
+    const matchDate = new Date(pred.match_date + 'T' + (pred.match_time || '15:00'));
     const timeStr = matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const dateStr = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     
     const getInitials = (name) => name.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
     
     return `
-        <div class="prediction-card ${pred.is_vip == 1 ? 'vip' : ''}" data-id="${pred.id}">
+        <div class="prediction-card ${pred.is_vip == 1 ? 'vip' : ''}">
             <div class="card-header">
                 <div class="league-info">
                     <span class="league-name">${pred.league_name || 'Football'}</span>
@@ -204,7 +233,7 @@ function createPredictionCard(pred) {
                     </div>
                     <div class="prediction-row">
                         <span class="prediction-label">Status</span>
-                        <span class="result-badge ${resultBadgeClass[pred.result]}">${resultText[pred.result]}</span>
+                        <span class="result-badge ${resultBadgeClass[pred.result] || 'pending'}">${resultText[pred.result] || '⏳ Pending'}</span>
                     </div>
                 </div>
             </div>
@@ -217,32 +246,32 @@ function createPredictionCard(pred) {
     `;
 }
 
-// Render demo predictions (fallback)
 function renderDemoPredictions() {
     const demoPredictions = [
         {
             id: 1, home_team: 'Manchester United', away_team: 'Liverpool',
-            match_date: new Date().toISOString().split('T')[0], match_time: '15:00:00',
+            match_date: new Date().toISOString().split('T')[0], match_time: '15:00',
             prediction: 'Over 2.5 Goals', odds: 1.85, confidence: 'high', result: 'pending',
             analysis: 'Both teams score frequently in derbies.', is_vip: 0, league_name: 'Premier League'
         },
         {
             id: 2, home_team: 'Real Madrid', away_team: 'Barcelona',
-            match_date: new Date().toISOString().split('T')[0], match_time: '20:00:00',
+            match_date: new Date().toISOString().split('T')[0], match_time: '20:00',
             prediction: 'Both Teams to Score', odds: 1.65, confidence: 'very_high', result: 'pending',
             analysis: 'El Clasico always delivers goals!', is_vip: 1, league_name: 'La Liga'
         }
     ];
     
+    // Save demo data to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoPredictions));
+    
     renderPredictions(demoPredictions);
-    renderStats({ won: 156, lost: 23, pending: 5 });
+    renderStats({ won: 156, lost: 23, pending: 2 });
 }
 
-// Filter by league
 function filterByLeague(leagueId) {
     currentLeague = leagueId;
     
-    // Update active tab
     document.querySelectorAll('.league-tab').forEach(tab => {
         tab.classList.remove('active');
         if (tab.dataset.league == leagueId || (leagueId === 'all' && tab.dataset.league === 'all')) {
@@ -260,7 +289,6 @@ function filterByLeague(leagueId) {
     renderPredictions(filtered);
 }
 
-// Render stats
 function renderStats(stats) {
     if (!stats) return;
     
@@ -273,7 +301,6 @@ function renderStats(stats) {
     animateCounter(elements.winRate, winRate, '%');
 }
 
-// Counter animation
 function animateCounter(element, target, suffix = '') {
     if (!element) return;
     
@@ -294,7 +321,6 @@ function animateCounter(element, target, suffix = '') {
     requestAnimationFrame(update);
 }
 
-// Initialize animations
 function initAnimations() {
     const statNumbers = document.querySelectorAll('.stat-number[data-count]');
     
@@ -312,14 +338,11 @@ function initAnimations() {
     statNumbers.forEach(el => observer.observe(el));
 }
 
-// Initialize event listeners
 function initEventListeners() {
-    // Clear filter button
     if (elements.clearFilter) {
         elements.clearFilter.addEventListener('click', () => filterByLeague('all'));
     }
     
-    // Mobile toggle
     if (elements.mobileToggle) {
         elements.mobileToggle.addEventListener('click', () => {
             document.querySelector('.nav-links')?.classList.toggle('active');
@@ -348,7 +371,6 @@ function initEventListeners() {
         });
     }
     
-    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -359,7 +381,6 @@ function initEventListeners() {
         });
     });
     
-    // Navbar scroll effect
     window.addEventListener('scroll', () => {
         const navbar = document.querySelector('.navbar');
         if (window.pageYOffset > 100) {

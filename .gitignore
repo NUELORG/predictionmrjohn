@@ -11,9 +11,3 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Old PHP files (not needed for Vercel)
-/admin/
-/api/
-/config/
-/data/
-
