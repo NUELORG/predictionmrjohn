@@ -29,8 +29,8 @@
 // 6. Paste both below:
 // ============================================================
 
-const JSONBIN_BIN_ID = '679aff608a456b79667498e5'; // <-- PASTE YOUR BIN ID HERE
-const JSONBIN_API_KEY = '$2a$10$Gx5s8cPwR3Y2m7zQgKjNVOv0IuL4C1KpC5J6jYwTLqL1pF3a5XYZW'; // <-- PASTE YOUR X-MASTER-KEY HERE
+const JSONBIN_BIN_ID = '698238ceae596e708f0e91b4';
+const JSONBIN_API_KEY = '$2a$10$TGRuTQNJvIDo1F2ESTCx5eEwl8azX3A9Zzsn3WgQMu.I4vHha67ey';
 
 const API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 

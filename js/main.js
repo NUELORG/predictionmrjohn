@@ -5,8 +5,8 @@
 
 // JSONBin.io Configuration
 // TO SETUP: Go to jsonbin.io, create free account, create a bin, and paste your IDs here
-const JSONBIN_BIN_ID = '$JSONBIN_BIN_ID'; // Replace with your bin ID after setup
-const JSONBIN_API_KEY = '$2a$10$xxxxxx'; // Replace with your API key (X-Master-Key)
+const JSONBIN_BIN_ID = '698238ceae596e708f0e91b4';
+const JSONBIN_API_KEY = '$2a$10$TGRuTQNJvIDo1F2ESTCx5eEwl8azX3A9Zzsn3WgQMu.I4vHha67ey';
 
 const API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
