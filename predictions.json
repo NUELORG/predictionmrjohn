@@ -1,0 +1,48 @@
+{
+  "predictions": [
+    {
+      "id": 1,
+      "home_team": "Manchester United",
+      "away_team": "Liverpool",
+      "league_id": 1,
+      "league_name": "Premier League",
+      "match_date": "2026-02-05",
+      "match_time": "15:00",
+      "prediction": "Over 2.5 Goals",
+      "odds": 1.85,
+      "confidence": "high",
+      "analysis": "Both teams have scored in their last 5 meetings.",
+      "result": "pending",
+      "is_vip": 0
+    },
+    {
+      "id": 2,
+      "home_team": "Real Madrid",
+      "away_team": "Barcelona",
+      "league_id": 2,
+      "league_name": "La Liga",
+      "match_date": "2026-02-06",
+      "match_time": "20:00",
+      "prediction": "Both Teams to Score",
+      "odds": 1.65,
+      "confidence": "very_high",
+      "analysis": "El Clasico always produces goals!",
+      "result": "pending",
+      "is_vip": 1
+    }
+  ],
+  "leagues": [
+    {"id": 1, "name": "Premier League"},
+    {"id": 2, "name": "La Liga"},
+    {"id": 3, "name": "Serie A"},
+    {"id": 4, "name": "Bundesliga"},
+    {"id": 5, "name": "Ligue 1"},
+    {"id": 6, "name": "Champions League"}
+  ],
+  "stats": {
+    "won": 156,
+    "lost": 23,
+    "pending": 5
+  }
+}
+
