@@ -1,10 +1,14 @@
 /**
  * ScoreSage - Main JavaScript
- * Works with Vercel - uses localStorage for data
+ * Uses JSONBin.io for cloud storage (everyone sees same data)
  */
 
-const STORAGE_KEY = 'scoresage_predictions';
-const DATA_URL = 'predictions.json';
+// JSONBin.io Configuration
+// TO SETUP: Go to jsonbin.io, create free account, create a bin, and paste your IDs here
+const JSONBIN_BIN_ID = '$JSONBIN_BIN_ID'; // Replace with your bin ID after setup
+const JSONBIN_API_KEY = '$2a$10$xxxxxx'; // Replace with your API key (X-Master-Key)
+
+const API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 // DOM Elements
 const elements = {
@@ -39,50 +43,30 @@ function setCurrentDate() {
     }
 }
 
-// Load data - first try localStorage (admin data), then fall back to JSON file
+// Load data from JSONBin (cloud) or fallback to local JSON
 async function loadAllData() {
     showLoading();
     
-    // First check localStorage for admin-added predictions
-    const localData = localStorage.getItem(STORAGE_KEY);
-    
-    if (localData) {
-        const predictions = JSON.parse(localData);
-        const stats = {
-            won: predictions.filter(p => p.result === 'won').length,
-            lost: predictions.filter(p => p.result === 'lost').length,
-            pending: predictions.filter(p => p.result === 'pending').length
-        };
-        
-        allData = {
-            predictions: predictions,
-            leagues: [
-                {id: 1, name: 'Premier League'},
-                {id: 2, name: 'La Liga'},
-                {id: 3, name: 'Serie A'},
-                {id: 4, name: 'Bundesliga'},
-                {id: 5, name: 'Ligue 1'},
-                {id: 6, name: 'Champions League'},
-                {id: 7, name: 'Europa League'}
-            ],
-            stats: stats
-        };
-        
-        renderLeagueTabs(allData.leagues);
-        renderPredictions(allData.predictions);
-        renderStats(allData.stats);
-        return;
-    }
-    
-    // Fall back to predictions.json file
     try {
-        const response = await fetch(DATA_URL + '?v=' + Date.now());
-        allData = await response.json();
-        
-        // Save to localStorage for consistency
-        if (allData.predictions) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allData.predictions));
+        // Try loading from JSONBin first
+        if (JSONBIN_BIN_ID && !JSONBIN_BIN_ID.includes('$')) {
+            const response = await fetch(API_URL + '/latest', {
+                headers: { 'X-Access-Key': JSONBIN_API_KEY }
+            });
+            const result = await response.json();
+            
+            if (result.record) {
+                allData = result.record;
+                renderLeagueTabs(allData.leagues);
+                renderPredictions(allData.predictions);
+                renderStats(allData.stats);
+                return;
+            }
         }
+        
+        // Fallback to local predictions.json
+        const response = await fetch('predictions.json?v=' + Date.now());
+        allData = await response.json();
         
         renderLeagueTabs(allData.leagues);
         renderPredictions(allData.predictions);
@@ -128,26 +112,18 @@ function renderLeagueTabs(leagues) {
 
 function showLoading() {
     if (!elements.predictionsGrid) return;
-    
     elements.predictionsGrid.innerHTML = `
         <div class="loading-state">
             <div class="loader"></div>
             <p>Loading predictions...</p>
         </div>
     `;
-    
-    if (elements.noPredictions) {
-        elements.noPredictions.classList.add('hidden');
-    }
+    if (elements.noPredictions) elements.noPredictions.classList.add('hidden');
 }
 
 function showNoPredictions() {
-    if (elements.predictionsGrid) {
-        elements.predictionsGrid.innerHTML = '';
-    }
-    if (elements.noPredictions) {
-        elements.noPredictions.classList.remove('hidden');
-    }
+    if (elements.predictionsGrid) elements.predictionsGrid.innerHTML = '';
+    if (elements.noPredictions) elements.noPredictions.classList.remove('hidden');
 }
 
 function renderPredictions(predictions) {
@@ -158,9 +134,7 @@ function renderPredictions(predictions) {
         return;
     }
     
-    if (elements.noPredictions) {
-        elements.noPredictions.classList.add('hidden');
-    }
+    if (elements.noPredictions) elements.noPredictions.classList.add('hidden');
     
     elements.predictionsGrid.innerHTML = predictions.map(pred => createPredictionCard(pred)).join('');
     
@@ -262,11 +236,9 @@ function renderDemoPredictions() {
         }
     ];
     
-    // Save demo data to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoPredictions));
-    
+    allData = { predictions: demoPredictions, leagues: [{id:1,name:'Premier League'},{id:2,name:'La Liga'}], stats: {won:156,lost:23,pending:2} };
     renderPredictions(demoPredictions);
-    renderStats({ won: 156, lost: 23, pending: 2 });
+    renderStats(allData.stats);
 }
 
 function filterByLeague(leagueId) {
@@ -291,7 +263,6 @@ function filterByLeague(leagueId) {
 
 function renderStats(stats) {
     if (!stats) return;
-    
     animateCounter(elements.wonCount, stats.won || 0);
     animateCounter(elements.lostCount, stats.lost || 0);
     animateCounter(elements.pendingCount, stats.pending || 0);
@@ -303,7 +274,6 @@ function renderStats(stats) {
 
 function animateCounter(element, target, suffix = '') {
     if (!element) return;
-    
     const duration = 2000;
     const startTime = performance.now();
     
@@ -312,29 +282,23 @@ function animateCounter(element, target, suffix = '') {
         const progress = Math.min(elapsed / duration, 1);
         const easeOutQuart = 1 - Math.pow(1 - progress, 4);
         const current = Math.floor(target * easeOutQuart);
-        
         element.textContent = current.toLocaleString() + suffix;
-        
         if (progress < 1) requestAnimationFrame(update);
     }
-    
     requestAnimationFrame(update);
 }
 
 function initAnimations() {
     const statNumbers = document.querySelectorAll('.stat-number[data-count]');
-    
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const el = entry.target;
-                const target = parseInt(el.dataset.count);
-                animateCounter(el, target);
+                animateCounter(el, parseInt(el.dataset.count));
                 observer.unobserve(el);
             }
         });
     }, { threshold: 0.5 });
-    
     statNumbers.forEach(el => observer.observe(el));
 }
 
@@ -359,10 +323,8 @@ function initEventListeners() {
         mainLogo.addEventListener('click', (e) => {
             e.preventDefault();
             logoClickCount++;
-            
             if (logoClickTimer) clearTimeout(logoClickTimer);
             logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2000);
-            
             if (logoClickCount >= 5) {
                 adminLink.style.display = 'inline-flex';
                 adminLink.style.animation = 'fadeIn 0.3s ease';
@@ -375,18 +337,13 @@ function initEventListeners() {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
     
     window.addEventListener('scroll', () => {
         const navbar = document.querySelector('.navbar');
-        if (window.pageYOffset > 100) {
-            navbar?.classList.add('scrolled');
-        } else {
-            navbar?.classList.remove('scrolled');
-        }
+        if (window.pageYOffset > 100) navbar?.classList.add('scrolled');
+        else navbar?.classList.remove('scrolled');
     });
 }
